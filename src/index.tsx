@@ -6,7 +6,9 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo managed workflow\n';
 
-const CloudinarySdk = NativeModules.CloudinarySdk  ? NativeModules.CloudinarySdk  : new Proxy(
+const CloudinarySdk = NativeModules.CloudinarySdk
+  ? NativeModules.CloudinarySdk
+  : new Proxy(
       {},
       {
         get() {
@@ -15,12 +17,6 @@ const CloudinarySdk = NativeModules.CloudinarySdk  ? NativeModules.CloudinarySdk
       }
     );
 
-export function multiply(a: number, b: number): Promise<number> {
-  return CloudinarySdk.multiply(a, b);
-}
-
-
-export function setup(options: { cloudName: string }): Promise<void> {
+export function setup(options: Record<string, any>): Promise<void> {
   return CloudinarySdk.setup(options);
 }
-

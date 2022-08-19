@@ -20,3 +20,12 @@ const CloudinarySdk = NativeModules.CloudinarySdk
 export function setup(options: Record<string, any>): Promise<void> {
   return CloudinarySdk.setup(options);
 }
+
+export type UploadParams = {
+  url: string;
+  presetName: string;
+};
+
+export function upload(params: UploadParams): Promise<void> {
+  return CloudinarySdk.upload(params);
+}

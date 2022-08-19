@@ -11,4 +11,8 @@ RCT_EXTERN_METHOD(setup:(NSDictionary *)options
   return NO;
 }
 
+RCT_EXTERN_METHOD(upload:(NSDictionary *)params
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+
 @end

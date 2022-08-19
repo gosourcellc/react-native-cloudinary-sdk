@@ -25,6 +25,21 @@ export default function App() {
     setup();
   }, []);
 
+  const uploadPress = async () => {
+    const url = response?.assets?.[0]?.uri;
+    if (url) {
+      try {
+        const uploaded_url = await Cloudinary.upload({
+          url,
+          presetName: Config.presetName,
+        });
+        console.warn(uploaded_url);
+      } catch (error) {
+        console.warn(error);
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       {response && (
@@ -32,15 +47,7 @@ export default function App() {
           <Text style={{ paddingBottom: 30 }}>
             Result: {response?.assets?.[0]?.uri}
           </Text>
-          <Button
-            title={'Upload'}
-            onPress={() => {
-              // Cloudinary.upload(response?.assets?.[0]?.uri, {
-              //   folder: 'test',
-              //   public_id: 'test',
-              // }).then(setResult);
-            }}
-          />
+          <Button title={'Upload'} onPress={uploadPress} />
           <View style={styles.separator} />
         </View>
       )}

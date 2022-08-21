@@ -1,6 +1,7 @@
+#import "React/RCTEventEmitter.h"
 #import <React/RCTBridgeModule.h>
 
-@interface RCT_EXTERN_MODULE(CloudinarySdk, NSObject)
+@interface RCT_EXTERN_MODULE(CloudinarySdk, RCTEventEmitter)
 
 RCT_EXTERN_METHOD(setup:(NSDictionary *)options
                  withResolver:(RCTPromiseResolveBlock)resolve

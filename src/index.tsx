@@ -1,4 +1,9 @@
-import { NativeModules, Platform } from 'react-native';
+import {
+  EmitterSubscription,
+  NativeEventEmitter,
+  NativeModules,
+  Platform,
+} from 'react-native';
 
 const LINKING_ERROR =
   `The package 'react-native-cloudinary-sdk' doesn't seem to be linked. Make sure: \n\n` +
@@ -17,6 +22,45 @@ const CloudinarySdk = NativeModules.CloudinarySdk
       }
     );
 
+const emitter = new NativeEventEmitter(CloudinarySdk);
+
+export enum CloudinaryEvent {
+  UPLOAD_PROGRESS_EVENT = 'progressChanged',
+}
+
+type CloudinaryListener = (data: { uid: string; progress: number }) => void;
+
+function addEventListener(
+  event: CloudinaryEvent,
+  listener: CloudinaryListener
+) {
+  return emitter.addListener(event, listener);
+}
+
+function removeSubscription(subscription: EmitterSubscription) {
+  return emitter.removeSubscription(subscription);
+}
+
+const listeners: Record<string, EmitterSubscription | undefined> = {};
+
+const addEventListenerForUID = (
+  uid: string,
+  event: CloudinaryEvent,
+  listener: CloudinaryListener
+) => {
+  removeSubscriptionForUID(uid);
+
+  listeners[uid] = addEventListener(event, listener);
+};
+
+const removeSubscriptionForUID = (key: string) => {
+  const previousListener = listeners[key];
+  if (previousListener) {
+    removeSubscription(previousListener);
+    listeners[key] = undefined;
+  }
+};
+
 export function setup(options: Record<string, any>): Promise<void> {
   return CloudinarySdk.setup(options);
 }
@@ -26,6 +70,21 @@ export type UploadParams = {
   presetName: string;
 };
 
-export function upload(params: UploadParams): Promise<void> {
-  return CloudinarySdk.upload(params);
+export function upload(
+  params: UploadParams,
+  onProgress?: CloudinaryListener
+): Promise<void> {
+  const uid =
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15);
+
+  if (onProgress) {
+    addEventListenerForUID(
+      uid,
+      CloudinaryEvent.UPLOAD_PROGRESS_EVENT,
+      onProgress
+    );
+  }
+
+  return CloudinarySdk.upload({ uid, ...params });
 }

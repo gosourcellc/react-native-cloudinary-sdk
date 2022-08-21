@@ -29,10 +29,15 @@ export default function App() {
     const url = response?.assets?.[0]?.uri;
     if (url) {
       try {
-        const uploaded_url = await Cloudinary.upload({
-          url,
-          presetName: Config.presetName,
-        });
+        const uploaded_url = await Cloudinary.upload(
+          {
+            url,
+            presetName: Config.presetName,
+          },
+          (data) => {
+            console.warn('onProgress - ', data.progress);
+          }
+        );
         console.warn(uploaded_url);
       } catch (error) {
         console.warn(error);

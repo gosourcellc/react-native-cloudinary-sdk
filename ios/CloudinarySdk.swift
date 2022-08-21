@@ -1,12 +1,31 @@
 import Cloudinary
 
 @objc(CloudinarySdk)
-class CloudinarySdk: NSObject {
+class CloudinarySdk: RCTEventEmitter {
     open var cloudinary: CLDCloudinary!
+    var hasListeners = false
+    
+    @objc override static func requiresMainQueueSetup() -> Bool {
+      return true
+    }
+    
+    @objc override func supportedEvents() -> [String]? {
+      return [
+        "progressChanged"
+      ]
+    }
+    
+    @objc override func startObserving() {
+      hasListeners = true
+    }
+
+    @objc override func stopObserving() {
+      hasListeners = false
+    }
     
     @objc(setup:withResolver:withRejecter:)
     func setup(options: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-        NSLog("CloudinarySdk Options %@", options)
+//        NSLog("CloudinarySdk Options %@", options)
         if options["cloud_name"] != nil {
             cloudinary = CLDCloudinary(configuration: CLDConfiguration(options: options as! [String : AnyObject])!)
             resolve({})
@@ -20,10 +39,13 @@ class CloudinarySdk: NSObject {
         let resourceType = CLDUrlResourceType.image
         let url = params["url"] ?? ""
         let presetName = params["presetName"] ?? ""
+        let uid = params["uid"] ?? ""
         if let url = URL(string: url) {
             CloudinaryHelper.upload(cloudinary: cloudinary, url: url, presetName: presetName, resourceType: resourceType)
                 .progress({ progress in
-//                    NotificationCenter.default.post(name: InProgressViewController.progressChangedNotification, object: nil, userInfo: ["name": name!, "progress": progress])
+                    if self.hasListeners {
+                        self.sendEvent(withName: "progressChanged", body: ["uid": uid, "progress": Float(progress.fractionCompleted)])
+                    }
                 }).response({ response, error in
                     if (response != nil) {
                         resolve(response?.secureUrl)

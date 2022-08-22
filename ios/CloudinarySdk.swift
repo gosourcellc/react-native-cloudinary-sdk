@@ -40,7 +40,6 @@ class CloudinarySdk: RCTEventEmitter {
     
     @objc(setup:withResolver:withRejecter:)
     func setup(options: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
-//        NSLog("CloudinarySdk Options %@", options)
         if options["cloud_name"] != nil {
             cloudinary = CLDCloudinary(configuration: CLDConfiguration(options: options as! [String : AnyObject])!)
             resolve({})

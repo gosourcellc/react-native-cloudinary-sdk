@@ -1,5 +1,10 @@
 import * as React from 'react';
 import * as ImagePicker from 'react-native-image-picker';
+import DocumentPicker, {
+  DocumentPickerResponse,
+  isInProgress,
+  types,
+} from 'react-native-document-picker';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
 import * as Cloudinary from 'react-native-cloudinary-sdk';
@@ -10,6 +15,23 @@ export default function App() {
   const [response, setResponse] =
     React.useState<ImagePicker.ImagePickerResponse | null>(null);
   const [progress, setProgress] = React.useState<Record<string, number>>({});
+  const [docPickerResult, setDocPickerResult] = React.useState<
+    Array<DocumentPickerResponse> | undefined | null
+  >();
+
+  const handleError = (err: unknown) => {
+    if (DocumentPicker.isCancel(err)) {
+      console.warn('cancelled');
+      // User cancelled the picker, exit any dialogs or menus and move on
+    } else if (isInProgress(err)) {
+      console.warn(
+        'multiple pickers were opened, only the last will be considered'
+      );
+    } else {
+      throw err;
+    }
+  };
+
   const onButtonPress = React.useCallback((type, options) => {
     if (type === 'capture') {
       ImagePicker.launchCamera(options, setResponse);
@@ -55,25 +77,34 @@ export default function App() {
     }
   };
 
+  const pickedItem = (url: string | undefined, type: string | undefined) => (
+    <View key={url} style={styles.mediaContainer}>
+      <Text style={{ paddingBottom: 10 }}>Asset: {url}</Text>
+      <Text style={{ paddingBottom: 10 }}>Progress: {progress[url ?? '']}</Text>
+      <Button title={'Upload'} onPress={() => uploadPress(url, type)} />
+    </View>
+  );
+
+  const renderDocResult = () => {
+    if (docPickerResult) {
+      if (Array.isArray(docPickerResult)) {
+        return docPickerResult.map((item) =>
+          pickedItem(item.uri, item.type || undefined)
+        );
+      }
+    }
+    return null;
+  };
+
   return (
     <View style={styles.container}>
-      {response && (
-        <View style={{ width: '100%', alignItems: 'center' }}>
-          {response?.assets?.map((asset) => (
-            <View key={asset.uri} style={styles.mediaContainer}>
-              <Text style={{ paddingBottom: 10 }}>Asset: {asset?.uri}</Text>
-              <Text style={{ paddingBottom: 10 }}>
-                Progress: {progress[asset?.uri ?? '']}
-              </Text>
-              <Button
-                title={'Upload'}
-                onPress={() => uploadPress(asset?.uri, asset.type)}
-              />
-            </View>
-          ))}
-          <View style={styles.separator} />
-        </View>
-      )}
+      <View style={{ width: '100%', alignItems: 'center' }}>
+        {response?.assets?.map((asset) => {
+          return pickedItem(asset.uri, asset.type);
+        })}
+        {renderDocResult()}
+        <View style={styles.separator} />
+      </View>
       <Button
         title={'Take Photo'}
         onPress={() =>
@@ -93,6 +124,20 @@ export default function App() {
             includeBase64: false,
           })
         }
+      />
+      <Button
+        title={'Pdf picker'}
+        onPress={() => {
+          DocumentPicker.pick({
+            type: types.pdf,
+            allowMultiSelection: true,
+          })
+            .then((response) => {
+              console.warn(response);
+              setDocPickerResult(response);
+            })
+            .catch(handleError);
+        }}
       />
     </View>
   );

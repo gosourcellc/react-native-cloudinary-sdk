@@ -115,6 +115,7 @@ export default function App() {
           })
         }
       />
+      <View style={{ marginTop: 10 }} />
       <Button
         title={'Pick an image'}
         onPress={() =>
@@ -125,6 +126,7 @@ export default function App() {
           })
         }
       />
+      <View style={{ marginTop: 10 }} />
       <Button
         title={'Pdf picker'}
         onPress={() => {

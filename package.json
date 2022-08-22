@@ -105,7 +105,6 @@
   },
   "eslintConfig": {
     "root": true,
-    "parser": "@babel/eslint-parser",
     "extends": [
       "@react-native-community",
       "prettier"

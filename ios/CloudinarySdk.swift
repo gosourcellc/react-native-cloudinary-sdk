@@ -4,6 +4,12 @@ import Cloudinary
 class CloudinarySdk: RCTEventEmitter {
     open var cloudinary: CLDCloudinary!
     var hasListeners = false
+    var resourceTypes = [
+        "ImageUrlType": CLDUrlResourceType.image,
+        "VideoUrlType": CLDUrlResourceType.video,
+        "RawUrlType": CLDUrlResourceType.raw,
+        "AutoUrlType": CLDUrlResourceType.auto
+      ]
     
     @objc override static func requiresMainQueueSetup() -> Bool {
       return true
@@ -22,6 +28,15 @@ class CloudinarySdk: RCTEventEmitter {
     @objc override func stopObserving() {
       hasListeners = false
     }
+   
+    @objc override func constantsToExport() -> [AnyHashable: Any]! {
+      return [
+        "ImageUrlType": "ImageUrlType",
+        "VideoUrlType": "VideoUrlType",
+        "RawUrlType": "RawUrlType",
+        "AutoUrlType": "AutoUrlType"
+      ]
+    }
     
     @objc(setup:withResolver:withRejecter:)
     func setup(options: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
@@ -35,13 +50,18 @@ class CloudinarySdk: RCTEventEmitter {
     }
     
     @objc(upload:withResolver:withRejecter:)
-    func upload(params: Dictionary<String, String>, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
-        let resourceType = CLDUrlResourceType.image
+    func upload(params: Dictionary<String, Any>, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+        let resourceType: CLDUrlResourceType
+        if let type = params["type"] {
+            resourceType = resourceTypes[type as! String] ?? CLDUrlResourceType.auto
+        } else {
+            resourceType = CLDUrlResourceType.auto
+        }
         let url = params["url"] ?? ""
         let presetName = params["presetName"] ?? ""
         let uid = params["uid"] ?? ""
-        if let url = URL(string: url) {
-            CloudinaryHelper.upload(cloudinary: cloudinary, url: url, presetName: presetName, resourceType: resourceType)
+        if let url = URL(string: url as! String) {
+            CloudinaryHelper.upload(cloudinary: cloudinary, url: url, presetName: presetName as! String, resourceType: resourceType )
                 .progress({ progress in
                     if self.hasListeners {
                         self.sendEvent(withName: "progressChanged", body: ["uid": uid, "progress": Float(progress.fractionCompleted)])

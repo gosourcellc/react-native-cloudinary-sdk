@@ -9,7 +9,7 @@ import Config from '../config';
 export default function App() {
   const [response, setResponse] =
     React.useState<ImagePicker.ImagePickerResponse | null>(null);
-
+  const [progress, setProgress] = React.useState<Record<string, number>>({});
   const onButtonPress = React.useCallback((type, options) => {
     if (type === 'capture') {
       ImagePicker.launchCamera(options, setResponse);
@@ -25,17 +25,27 @@ export default function App() {
     setup();
   }, []);
 
-  const uploadPress = async () => {
-    const url = response?.assets?.[0]?.uri;
+  const uploadPress = async (
+    url: string | undefined,
+    _type: string | undefined
+  ) => {
+    let type = Cloudinary.URL_TYPES.auto;
+    if (_type?.includes('image')) {
+      type = Cloudinary.URL_TYPES.image;
+    } else if (_type?.includes('video')) {
+      type = Cloudinary.URL_TYPES.video;
+    }
     if (url) {
       try {
         const uploaded_url = await Cloudinary.upload(
           {
             url,
             presetName: Config.presetName,
+            type,
           },
           (data) => {
             console.warn('onProgress - ', data.progress);
+            setProgress({ ...progress, [url]: data.progress });
           }
         );
         console.warn(uploaded_url);
@@ -49,10 +59,18 @@ export default function App() {
     <View style={styles.container}>
       {response && (
         <View style={{ width: '100%', alignItems: 'center' }}>
-          <Text style={{ paddingBottom: 30 }}>
-            Result: {response?.assets?.[0]?.uri}
-          </Text>
-          <Button title={'Upload'} onPress={uploadPress} />
+          {response?.assets?.map((asset) => (
+            <View key={asset.uri} style={styles.mediaContainer}>
+              <Text style={{ paddingBottom: 10 }}>Asset: {asset?.uri}</Text>
+              <Text style={{ paddingBottom: 10 }}>
+                Progress: {progress[asset?.uri ?? '']}
+              </Text>
+              <Button
+                title={'Upload'}
+                onPress={() => uploadPress(asset?.uri, asset.type)}
+              />
+            </View>
+          ))}
           <View style={styles.separator} />
         </View>
       )}
@@ -61,7 +79,7 @@ export default function App() {
         onPress={() =>
           onButtonPress('capture', {
             saveToPhotos: true,
-            mediaType: 'photo',
+            mediaType: 'mixed',
             includeBase64: false,
           })
         }
@@ -71,7 +89,7 @@ export default function App() {
         onPress={() =>
           onButtonPress('library', {
             selectionLimit: 0,
-            mediaType: 'photo',
+            mediaType: 'mixed',
             includeBase64: false,
           })
         }
@@ -97,5 +115,11 @@ const styles = StyleSheet.create({
     width: 100,
     backgroundColor: 'black',
     margin: 20,
+  },
+  mediaContainer: {
+    width: '100%',
+    alignItems: 'center',
+    borderColor: 'black',
+    borderWidth: 1,
   },
 });

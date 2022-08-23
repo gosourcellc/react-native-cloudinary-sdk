@@ -19,7 +19,7 @@ class CloudinaryHelper {
 
         if (resourceType == CLDUrlResourceType.image) {
             let chain = CLDImagePreprocessChain().addStep(CLDPreprocessHelpers.limit(width: 1500, height: 1500))
-                    .setEncoder(CLDPreprocessHelpers.customImageEncoder(format: EncodingFormat.JPEG, quality: 90))
+                    .setEncoder(CLDPreprocessHelpers.customImageEncoder(format: EncodingFormat.JPEG, quality: 80))
             return cloudinary.createUploader().uploadLarge(url: url, uploadPreset: presetName, params: params, preprocessChain: chain, chunkSize: 5 * 1024 * 1024)
         } else {
             return cloudinary.createUploader().uploadLarge(url: url, uploadPreset: presetName, params: params, chunkSize: 5 * 1024 * 1024)

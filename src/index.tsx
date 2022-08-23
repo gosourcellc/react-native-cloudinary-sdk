@@ -81,10 +81,10 @@ export type UploadParams = {
   type?: typeof URL_TYPES[keyof typeof URL_TYPES];
 };
 
-export function upload(
+export const upload = async (
   params: UploadParams,
   onProgress?: CloudinaryListener
-): Promise<void> {
+): Promise<void> => {
   const uid =
     Math.random().toString(36).substring(2, 15) +
     Math.random().toString(36).substring(2, 15);
@@ -93,9 +93,17 @@ export function upload(
     addEventListenerForUID(
       uid,
       CloudinaryEvent.UPLOAD_PROGRESS_EVENT,
-      onProgress
+      (data) => {
+        if (uid === data.uid) {
+          onProgress(data);
+        }
+      }
     );
   }
 
-  return CloudinarySdk.upload({ uid, ...params });
-}
+  const result = await CloudinarySdk.upload({ uid, ...params });
+  if (onProgress) {
+    removeSubscriptionForUID(uid);
+  }
+  return result;
+};

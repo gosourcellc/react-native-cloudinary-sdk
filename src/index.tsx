@@ -79,6 +79,11 @@ export type UploadParams = {
   url: string;
   presetName: string;
   type?: typeof URL_TYPES[keyof typeof URL_TYPES];
+  publicId?: string;
+  folder?: string;
+  signature?: string;
+  timestamp?: string;
+  context?: string;
 };
 
 export const upload = async (

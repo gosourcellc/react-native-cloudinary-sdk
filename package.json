@@ -1,5 +1,5 @@
 {
-  "name": "react-native-cloudinary-sdk",
+  "name": "@gosourceinc/react-native-cloudinary-sdk",
   "version": "0.1.0",
   "description": "test",
   "main": "lib/commonjs/index",

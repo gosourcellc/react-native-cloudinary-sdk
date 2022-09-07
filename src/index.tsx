@@ -82,7 +82,7 @@ export type UploadParams = {
   publicId?: string;
   folder?: string;
   signature?: string;
-  timestamp?: string;
+  timestamp?: number;
   context?: string;
 };
 

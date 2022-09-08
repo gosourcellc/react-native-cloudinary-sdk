@@ -88,7 +88,7 @@ class CloudinarySdk: RCTEventEmitter {
                     }
                 }).response({ response, error in
                     if (response != nil) {
-                        resolve(response?.secureUrl)
+                        resolve(response?.resultJson)
                         //                        PersistenceHelper.resourceUploaded(localPath: name!, publicId: (response?.publicId)!)
                         // cleanup - once a file is uploaded we don't use the local copy
                         //                        try? FileManager.default.removeItem(at: url)

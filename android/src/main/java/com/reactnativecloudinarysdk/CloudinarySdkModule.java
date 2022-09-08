@@ -204,8 +204,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
                     public void onSuccess(String requestId, Map resultData) {
                         // get secure url from result data
 //          Log.d(NAME, "onSuccess: " + resultData.toString());
-                        String secureUrl = resultData.get("secure_url").toString();
-                        promise.resolve(secureUrl);
+                        promise.resolve(Utils.mapToWritableMap(resultData));
                     }
 
                     @Override

@@ -175,12 +175,13 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
             options.put("folder", params.getString("folder"));
             options.put("context", params.getString("context"));
             options.put("upload_preset", params.getString("presetName"));
+            uploadRequest.options(options);
         } else {
+            uploadRequest.options(options);
             uploadRequest.unsigned(presetName);
         }
 
         String requestId = uploadRequest
-                .options(options)
                 .maxFileSize(100 * 1024 * 1024) // max 100mb
                 .callback(new UploadCallback() {
                     @Override

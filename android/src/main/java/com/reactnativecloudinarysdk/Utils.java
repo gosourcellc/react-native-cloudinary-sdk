@@ -1,10 +1,13 @@
 package com.reactnativecloudinarysdk;
 
+import android.media.ExifInterface;
+
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -55,4 +58,29 @@ public class Utils {
 
     return writableMap;
   }
+
+  static public int getExifAngle(String filePath) {
+    int angle = 0;
+    try {
+      ExifInterface exif = new ExifInterface(filePath);
+      int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+      switch (orientation) {
+        case ExifInterface.ORIENTATION_ROTATE_90:
+          angle = 90;
+          break;
+        case ExifInterface.ORIENTATION_ROTATE_180:
+          angle = 180;
+          break;
+        case ExifInterface.ORIENTATION_ROTATE_270:
+          angle = 270;
+          break;
+      }
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return angle;
+  }
+
 }

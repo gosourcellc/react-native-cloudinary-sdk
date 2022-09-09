@@ -1,6 +1,5 @@
 package com.reactnativecloudinarysdk;
 
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.util.Log;
 
@@ -28,7 +27,6 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -113,31 +111,6 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
         }
     }
 
-    public int getExifAngle(String filePath) {
-        int angle = 0;
-        try {
-            ExifInterface exif = new ExifInterface(filePath);
-            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
-//      Log.d("EXIF", "Exif: " + orientation);
-            switch (orientation) {
-                case ExifInterface.ORIENTATION_ROTATE_90:
-                    angle = 90;
-                    break;
-                case ExifInterface.ORIENTATION_ROTATE_180:
-                    angle = 180;
-                    break;
-                case ExifInterface.ORIENTATION_ROTATE_270:
-                    angle = 270;
-                    break;
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return angle;
-    }
-
     @ReactMethod
     public void upload(ReadableMap params, Promise promise) {
         uploadParams = params;
@@ -159,7 +132,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
         }
 
         if (params.getString("type").contentEquals("ImageUrlType")) {
-            int angle = getExifAngle(filePath);
+            int angle = Utils.getExifAngle(filePath);
             uploadRequest.preprocess(
                     ImagePreprocessChain.limitDimensionsChain(MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION)
                             .addStep(new DimensionsValidator(10, 10, MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION))

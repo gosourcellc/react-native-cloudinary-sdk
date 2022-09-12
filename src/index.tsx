@@ -47,10 +47,6 @@ function addEventListener(
   return emitter.addListener(event, listener);
 }
 
-function removeSubscription(subscription: EmitterSubscription) {
-  return emitter.removeSubscription(subscription);
-}
-
 const listeners: Record<string, EmitterSubscription | undefined> = {};
 
 const addEventListenerForUID = (
@@ -66,7 +62,7 @@ const addEventListenerForUID = (
 const removeSubscriptionForUID = (key: string) => {
   const previousListener = listeners[key];
   if (previousListener) {
-    removeSubscription(previousListener);
+    previousListener.remove();
     listeners[key] = undefined;
   }
 };

@@ -117,11 +117,33 @@ export default function App() {
       />
       <View style={{ marginTop: 10 }} />
       <Button
+        title={'Record Video'}
+        onPress={() =>
+          onButtonPress('capture', {
+            saveToPhotos: true,
+            mediaType: 'video',
+            includeBase64: false,
+          })
+        }
+      />
+      <View style={{ marginTop: 10 }} />
+      <Button
         title={'Pick an image'}
         onPress={() =>
           onButtonPress('library', {
             selectionLimit: 0,
             mediaType: 'mixed',
+            includeBase64: false,
+          })
+        }
+      />
+      <View style={{ marginTop: 10 }} />
+      <Button
+        title={'Pick an video'}
+        onPress={() =>
+          onButtonPress('library', {
+            selectionLimit: 0,
+            mediaType: 'video',
             includeBase64: false,
           })
         }

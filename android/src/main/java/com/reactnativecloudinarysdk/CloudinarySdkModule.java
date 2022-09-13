@@ -38,7 +38,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
     public static final String NAME = "CloudinarySdk";
 
     public final int MAX_IMAGE_DIMENSION = 1500;
-    public final int DEBOUNCE_TIME = 1000;
+    public final int DEBOUNCE_TIME = 500;
 
     private ReadableMap setupParams;
     private ReadableMap uploadParams;
@@ -168,7 +168,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onProgress(String requestId, long bytes, long totalBytes) {
-                      debouncer.debounce(Void.class, new Runnable() {
+                      debouncer.debounce(requestId, new Runnable() {
                         @Override public void run() {
                           // ...
                           Double progress = (double) bytes / totalBytes;

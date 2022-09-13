@@ -29,12 +29,16 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @ReactModule(name = CloudinarySdkModule.NAME)
 public class CloudinarySdkModule extends ReactContextBaseJavaModule {
+    final Debouncer debouncer = new Debouncer();
+
     public static final String NAME = "CloudinarySdk";
 
     public final int MAX_IMAGE_DIMENSION = 1500;
+    public final int DEBOUNCE_TIME = 1000;
 
     private ReadableMap setupParams;
     private ReadableMap uploadParams;
@@ -164,14 +168,19 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onProgress(String requestId, long bytes, long totalBytes) {
-                        Double progress = (double) bytes / totalBytes;
+                      debouncer.debounce(Void.class, new Runnable() {
+                        @Override public void run() {
+                          // ...
+                          Double progress = (double) bytes / totalBytes;
 
-                        WritableMap eventBody = Arguments.createMap();
-                        eventBody.putDouble("progress", progress);
-                        eventBody.putString("uid", params.getString("uid"));
+                          WritableMap eventBody = Arguments.createMap();
+                          eventBody.putDouble("progress", progress);
+                          eventBody.putString("uid", params.getString("uid"));
 
-//          Log.d("CloudinarySdk", "progress: " + progress + " uid: " + params.getString("uid"));
-                        sendEvent(reactContext, "progressChanged", eventBody);
+            Log.d("CloudinarySdk", "progress: " + progress + " uid: " + params.getString("uid"));
+                          sendEvent(reactContext, "progressChanged", eventBody);
+                        }
+                      }, DEBOUNCE_TIME, TimeUnit.MILLISECONDS);
                     }
 
                     @Override

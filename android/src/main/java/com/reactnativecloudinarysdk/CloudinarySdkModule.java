@@ -43,6 +43,8 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
     private ReadableMap setupParams;
     private ReadableMap uploadParams;
 
+    private Map<String, String> requests = new HashMap<>();
+
     public CloudinarySdkModule(ReactApplicationContext reactContext) {
         super(reactContext);
     }
@@ -83,6 +85,14 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit(eventName, params);
+    }
+
+    @ReactMethod
+    public void cancel(String uid) {
+        String requestId = requests.get(uid);
+        if (requestId != null) {
+            MediaManager.get().cancelRequest(requestId);
+        }
     }
 
     @ReactMethod
@@ -177,7 +187,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
                           eventBody.putDouble("progress", progress);
                           eventBody.putString("uid", params.getString("uid"));
 
-            Log.d("CloudinarySdk", "progress: " + progress + " uid: " + params.getString("uid"));
+//            Log.d("CloudinarySdk", "progress: " + progress + " uid: " + params.getString("uid"));
                           sendEvent(reactContext, "progressChanged", eventBody);
                         }
                       }, DEBOUNCE_TIME, TimeUnit.MILLISECONDS);
@@ -185,6 +195,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onSuccess(String requestId, Map resultData) {
+                       requests.remove(requestId);
                         // get secure url from result data
 //          Log.d(NAME, "onSuccess: " + resultData.toString());
                         promise.resolve(Utils.mapToWritableMap(resultData));
@@ -192,6 +203,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
                     @Override
                     public void onError(String requestId, ErrorInfo error) {
+                        requests.remove(requestId);
                         // your code here
 //          Log.d(NAME, String.format("Code - %d", error.getCode()) + " " + error.getDescription());
                         promise.reject(String.format("Code - %d", error.getCode()), error.getDescription());
@@ -203,5 +215,6 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
                     }
                 })
                 .dispatch(reactContext);
+        requests.put(params.getString("uid"), requestId);
     }
 }

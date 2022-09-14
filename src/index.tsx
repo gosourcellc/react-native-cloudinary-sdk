@@ -110,13 +110,19 @@ export type CloudinaryUploadResponse = {
   width: number; // 225;
 };
 
+export const cancelUpload = (uid: string) => {
+  CloudinarySdk.cancel(uid);
+};
+
 export const upload = async (
   params: UploadParams,
-  onProgress?: CloudinaryListener
+  onProgress?: CloudinaryListener,
+  onUID?: (uid: string) => void
 ): Promise<CloudinaryUploadResponse | undefined> => {
   const uid =
     Math.random().toString(36).substring(2, 15) +
     Math.random().toString(36).substring(2, 15);
+  onUID?.(uid);
 
   if (onProgress) {
     addEventListenerForUID(

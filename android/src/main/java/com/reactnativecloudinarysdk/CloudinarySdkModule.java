@@ -145,15 +145,15 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
             uploadRequest = mediaManager.upload(filePath);
         }
 
-        if (params.getString("type").contentEquals("ImageUrlType")) {
-            int angle = Utils.getExifAngle(filePath);
-            uploadRequest.preprocess(
-                    ImagePreprocessChain.limitDimensionsChain(MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION)
-                            .addStep(new DimensionsValidator(10, 10, MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION))
-                            .addStep(new Rotate(angle))
-                            .saveWith(new BitmapEncoder(BitmapEncoder.Format.JPEG, 80))
-            );
-        }
+//        if (params.getString("type").contentEquals("ImageUrlType")) {
+//            int angle = Utils.getExifAngle(filePath);
+//            uploadRequest.preprocess(
+//                    ImagePreprocessChain.limitDimensionsChain(MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION)
+//                            .addStep(new DimensionsValidator(10, 10, MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION))
+//                            .addStep(new Rotate(angle))
+//                            .saveWith(new BitmapEncoder(BitmapEncoder.Format.JPEG, 80))
+//            );
+//        }
 
         Map<String, Object> options = new HashMap<>();
         options.put("resource_type", getResourceType(params.getString("type")));

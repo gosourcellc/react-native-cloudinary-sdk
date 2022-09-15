@@ -14,19 +14,19 @@ class CloudinaryHelper {
     static let defaultImageFormat = "png"
 
     static func upload(cloudinary: CLDCloudinary, url: URL, presetName: String, params: CLDUploadRequestParams, resourceType: CLDUrlResourceType, signed: Bool) -> CLDUploadRequest {
-        if (resourceType == CLDUrlResourceType.image) {
-            let chain = CLDImagePreprocessChain().addStep(CLDPreprocessHelpers.limit(width: 1500, height: 1500))
-                .setEncoder(CLDPreprocessHelpers.customImageEncoder(format: EncodingFormat.JPEG, quality: 80))
-            if (signed) {
-                return cloudinary.createUploader().signedUploadLarge(url: url, params: params, preprocessChain: chain, chunkSize: 5 * 1024 * 1024)
-            }
-            return cloudinary.createUploader().uploadLarge(url: url, uploadPreset: presetName, params: params, preprocessChain: chain, chunkSize: 5 * 1024 * 1024)
-        } else {
+//        if (resourceType == CLDUrlResourceType.image) {
+//            let chain = CLDImagePreprocessChain().addStep(CLDPreprocessHelpers.limit(width: 1500, height: 1500))
+//                .setEncoder(CLDPreprocessHelpers.customImageEncoder(format: EncodingFormat.JPEG, quality: 80))
+//            if (signed) {
+//                return cloudinary.createUploader().signedUploadLarge(url: url, params: params, preprocessChain: chain, chunkSize: 5 * 1024 * 1024)
+//            }
+//            return cloudinary.createUploader().uploadLarge(url: url, uploadPreset: presetName, params: params, preprocessChain: chain, chunkSize: 5 * 1024 * 1024)
+//        } else {
             if (signed) {
                 return cloudinary.createUploader().signedUploadLarge(url: url, params: params, chunkSize: 5 * 1024 * 1024)
             }
             return cloudinary.createUploader().uploadLarge(url: url, uploadPreset: presetName, params: params, chunkSize: 5 * 1024 * 1024)
-        }
+//        }
     }
 }
 

@@ -157,6 +157,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
         Map<String, Object> options = new HashMap<>();
         options.put("resource_type", getResourceType(params.getString("type")));
+        options.put("chunk_size", 100 * 1024 * 1024);
         if (signed) {
             options.put("public_id", params.getString("publicId"));
             options.put("folder", params.getString("folder"));

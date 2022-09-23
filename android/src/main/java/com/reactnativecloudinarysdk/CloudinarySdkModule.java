@@ -6,6 +6,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.cloudinary.ProgressCallback;
 import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.UploadRequest;
 import com.cloudinary.android.callback.ErrorInfo;
@@ -27,6 +28,11 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +44,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
     public static final String NAME = "CloudinarySdk";
 
     public final int MAX_IMAGE_DIMENSION = 1500;
-    public final int DEBOUNCE_TIME = 500;
+    public final int DEBOUNCE_TIME = 100;
 
     private ReadableMap setupParams;
     private ReadableMap uploadParams;
@@ -130,20 +136,43 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
         uploadParams = params;
         boolean signed = params.getString("signature") != null;
         ReactContext reactContext = getReactApplicationContext();
-        String filePath = params.getString("url").replaceFirst("^file://", "");
-        Uri fileUri = null;
-        if (filePath.startsWith("content://")) {
-            fileUri = Uri.parse(filePath);
+        String urlString = params.getString("url");
+        try {
+          urlString = URLDecoder.decode(urlString, "UTF-8");
+        } catch (Exception exception) {
+          promise.resolve(exception.getMessage());
+          return;
         }
+        Uri uri = Uri.parse(urlString);
+Log.e(NAME, urlString);
 
-        String presetName = params.getString("presetName");
-        MediaManager mediaManager = MediaManager.get();
-        UploadRequest uploadRequest;
-        if (fileUri != null) {
-            uploadRequest = mediaManager.upload(fileUri);
-        } else {
-            uploadRequest = mediaManager.upload(filePath);
-        }
+String path;
+     try {
+       path = Utils.getPath(getReactApplicationContext(), uri);
+     } catch (Exception exception) {
+       promise.resolve(exception.getMessage());
+       return;
+     }
+
+      File file = new File(path);
+
+
+//      Uri uri = Uri.parse(urlString);
+//        String filePath = params.getString("url").replaceFirst("^file://", "");
+//        Uri fileUri = null;
+//        if (filePath.startsWith("content://")) {
+//            fileUri = Uri.parse(filePath);
+//        }
+//      File file = new File(uri.getPath());
+
+//        String presetName = params.getString("presetName");
+//        MediaManager mediaManager = MediaManager.get();
+//        UploadRequest uploadRequest;
+//        if (fileUri != null) {
+//            uploadRequest = mediaManager.upload(fileUri);
+//        } else {
+//            uploadRequest = mediaManager.upload(filePath);
+//        }
 
 //        if (params.getString("type").contentEquals("ImageUrlType")) {
 //            int angle = Utils.getExifAngle(filePath);
@@ -157,65 +186,88 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
         Map<String, Object> options = new HashMap<>();
         options.put("resource_type", getResourceType(params.getString("type")));
-        options.put("chunk_size", 100 * 1024 * 1024);
+        options.put("chunk_size", 5 * 1024 * 1024);
+        options.put("upload_preset", params.getString("presetName"));
         if (signed) {
             options.put("public_id", params.getString("publicId"));
             options.put("folder", params.getString("folder"));
             options.put("context", params.getString("context"));
-            options.put("upload_preset", params.getString("presetName"));
-            uploadRequest.options(options);
         } else {
-            uploadRequest.options(options);
-            uploadRequest.unsigned(presetName);
+          options.put("unsigned", true);
         }
 
-        String requestId = uploadRequest
-                .maxFileSize(100 * 1024 * 1024) // max 100mb
-                .callback(new UploadCallback() {
-                    @Override
-                    public void onStart(String requestId) {
-                        // your code here
-                    }
+      try {
+        Map resultData = MediaManager.get().getCloudinary().uploader().uploadLarge(file, options, new ProgressCallback() {
+          @Override
+          public void onProgress(long bytesUploaded, long totalBytes) {
+            debouncer.debounce(params.getString("uid"), new Runnable() {
+              @Override
+              public void run() {
+                // ...
+                Double progress = (double) bytesUploaded / totalBytes;
 
-                    @Override
-                    public void onProgress(String requestId, long bytes, long totalBytes) {
-                      debouncer.debounce(requestId, new Runnable() {
-                        @Override public void run() {
-                          // ...
-                          Double progress = (double) bytes / totalBytes;
-
-                          WritableMap eventBody = Arguments.createMap();
-                          eventBody.putDouble("progress", progress);
-                          eventBody.putString("uid", params.getString("uid"));
+                WritableMap eventBody = Arguments.createMap();
+                eventBody.putDouble("progress", progress);
+                eventBody.putString("uid", params.getString("uid"));
 
 //            Log.d("CloudinarySdk", "progress: " + progress + " uid: " + params.getString("uid"));
-                          sendEvent(reactContext, "progressChanged", eventBody);
-                        }
-                      }, DEBOUNCE_TIME, TimeUnit.MILLISECONDS);
-                    }
+                sendEvent(reactContext, "progressChanged", eventBody);
+              }
+            }, DEBOUNCE_TIME, TimeUnit.MILLISECONDS);
+          }
+        });
+        promise.resolve(Utils.mapToWritableMap(resultData));
+      } catch (IOException exception) {
+        promise.reject(exception.getMessage());
+      }
 
-                    @Override
-                    public void onSuccess(String requestId, Map resultData) {
-                       requests.remove(requestId);
-                        // get secure url from result data
-//          Log.d(NAME, "onSuccess: " + resultData.toString());
-                        promise.resolve(Utils.mapToWritableMap(resultData));
-                    }
-
-                    @Override
-                    public void onError(String requestId, ErrorInfo error) {
-                        requests.remove(requestId);
-                        // your code here
-//          Log.d(NAME, String.format("Code - %d", error.getCode()) + " " + error.getDescription());
-                        promise.reject(String.format("Code - %d", error.getCode()), error.getDescription());
-                    }
-
-                    @Override
-                    public void onReschedule(String requestId, ErrorInfo error) {
-                        // your code here
-                    }
-                })
-                .dispatch(reactContext);
-        requests.put(params.getString("uid"), requestId);
+//      String requestId = uploadRequest
+//                .maxFileSize(100 * 1024 * 1024) // max 100mb
+//                .callback(new UploadCallback() {
+//                    @Override
+//                    public void onStart(String requestId) {
+//                        // your code here
+//                    }
+//
+//                    @Override
+//                    public void onProgress(String requestId, long bytes, long totalBytes) {
+//                      debouncer.debounce(requestId, new Runnable() {
+//                        @Override public void run() {
+//                          // ...
+//                          Double progress = (double) bytes / totalBytes;
+//
+//                          WritableMap eventBody = Arguments.createMap();
+//                          eventBody.putDouble("progress", progress);
+//                          eventBody.putString("uid", params.getString("uid"));
+//
+////            Log.d("CloudinarySdk", "progress: " + progress + " uid: " + params.getString("uid"));
+//                          sendEvent(reactContext, "progressChanged", eventBody);
+//                        }
+//                      }, DEBOUNCE_TIME, TimeUnit.MILLISECONDS);
+//                    }
+//
+//                    @Override
+//                    public void onSuccess(String requestId, Map resultData) {
+//                       requests.remove(requestId);
+//                        // get secure url from result data
+////          Log.d(NAME, "onSuccess: " + resultData.toString());
+//                        promise.resolve(Utils.mapToWritableMap(resultData));
+//                    }
+//
+//                    @Override
+//                    public void onError(String requestId, ErrorInfo error) {
+//                        requests.remove(requestId);
+//                        // your code here
+////          Log.d(NAME, String.format("Code - %d", error.getCode()) + " " + error.getDescription());
+//                        promise.reject(String.format("Code - %d", error.getCode()), error.getDescription());
+//                    }
+//
+//                    @Override
+//                    public void onReschedule(String requestId, ErrorInfo error) {
+//                        // your code here
+//                    }
+//                })
+//                .dispatch(reactContext);
+//        requests.put(params.getString("uid"), requestId);
     }
 }

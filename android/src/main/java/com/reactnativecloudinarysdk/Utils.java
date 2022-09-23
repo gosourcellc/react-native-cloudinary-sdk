@@ -1,13 +1,26 @@
 package com.reactnativecloudinarysdk;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.media.ExifInterface;
+import android.net.Uri;
+import android.provider.DocumentsContract;
 
+import androidx.core.util.Pair;
+
+import com.cloudinary.utils.StringUtils;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +94,35 @@ public class Utils {
     }
 
     return angle;
+  }
+
+
+  public static String getPath(Context context, Uri uri) throws URISyntaxException {
+    if ("content".equalsIgnoreCase(uri.getScheme())) {
+      String[] projection = { "data"};
+      Cursor cursor = null;
+
+      try {
+        context.getContentResolver().takePersistableUriPermission(
+          uri,
+          Intent.FLAG_GRANT_READ_URI_PERMISSION
+        );
+        cursor = context.getContentResolver().query(uri, projection, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow( "_data");
+        if (cursor.moveToFirst()) {
+          // Method returns here with null value
+          return cursor.getString(column_index);
+        }
+      } catch (Exception e) {
+        // Eat it
+        throw e;
+      }
+    }
+    else if ("file".equalsIgnoreCase(uri.getScheme())) {
+      return uri.getPath();
+    }
+
+    return null;
   }
 
 }

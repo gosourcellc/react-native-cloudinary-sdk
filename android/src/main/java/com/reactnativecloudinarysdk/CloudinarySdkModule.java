@@ -6,15 +6,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.cloudinary.Cloudinary;
 import com.cloudinary.ProgressCallback;
 import com.cloudinary.android.MediaManager;
-import com.cloudinary.android.UploadRequest;
-import com.cloudinary.android.callback.ErrorInfo;
-import com.cloudinary.android.callback.UploadCallback;
-import com.cloudinary.android.preprocess.BitmapEncoder;
-import com.cloudinary.android.preprocess.DimensionsValidator;
-import com.cloudinary.android.preprocess.ImagePreprocessChain;
-import com.cloudinary.android.preprocess.Rotate;
 import com.cloudinary.android.signed.Signature;
 import com.cloudinary.android.signed.SignatureProvider;
 import com.facebook.react.bridge.Arguments;
@@ -29,9 +23,7 @@ import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +35,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
     public static final String NAME = "CloudinarySdk";
 
-    public final int MAX_IMAGE_DIMENSION = 1500;
+    public final int BUFFER_SIZE = 5 * 1024 * 1024;
     public final int DEBOUNCE_TIME = 100;
 
     private ReadableMap setupParams;
@@ -156,37 +148,9 @@ String path;
 
       File file = new File(path);
 
-
-//      Uri uri = Uri.parse(urlString);
-//        String filePath = params.getString("url").replaceFirst("^file://", "");
-//        Uri fileUri = null;
-//        if (filePath.startsWith("content://")) {
-//            fileUri = Uri.parse(filePath);
-//        }
-//      File file = new File(uri.getPath());
-
-//        String presetName = params.getString("presetName");
-//        MediaManager mediaManager = MediaManager.get();
-//        UploadRequest uploadRequest;
-//        if (fileUri != null) {
-//            uploadRequest = mediaManager.upload(fileUri);
-//        } else {
-//            uploadRequest = mediaManager.upload(filePath);
-//        }
-
-//        if (params.getString("type").contentEquals("ImageUrlType")) {
-//            int angle = Utils.getExifAngle(filePath);
-//            uploadRequest.preprocess(
-//                    ImagePreprocessChain.limitDimensionsChain(MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION)
-//                            .addStep(new DimensionsValidator(10, 10, MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION))
-//                            .addStep(new Rotate(angle))
-//                            .saveWith(new BitmapEncoder(BitmapEncoder.Format.JPEG, 80))
-//            );
-//        }
-
         Map<String, Object> options = new HashMap<>();
         options.put("resource_type", getResourceType(params.getString("type")));
-        options.put("chunk_size", 5 * 1024 * 1024);
+        options.put("chunk_size", BUFFER_SIZE);
         options.put("upload_preset", params.getString("presetName"));
         if (signed) {
             options.put("public_id", params.getString("publicId"));
@@ -196,8 +160,12 @@ String path;
           options.put("unsigned", true);
         }
 
+      Cloudinary cloudinary = MediaManager.get().getCloudinary();
+      String uniqueUploadId = cloudinary.randomPublicId();
       try {
-        Map resultData = MediaManager.get().getCloudinary().uploader().uploadLarge(file, options, new ProgressCallback() {
+        requests.put(params.getString("uid"), uniqueUploadId);
+        Map resultData = cloudinary.uploader()
+          .uploadLarge(file, options, BUFFER_SIZE, 0, uniqueUploadId, new ProgressCallback() {
           @Override
           public void onProgress(long bytesUploaded, long totalBytes) {
             debouncer.debounce(params.getString("uid"), new Runnable() {
@@ -216,58 +184,12 @@ String path;
             }, DEBOUNCE_TIME, TimeUnit.MILLISECONDS);
           }
         });
+        requests.remove(uniqueUploadId);
         promise.resolve(Utils.mapToWritableMap(resultData));
       } catch (IOException exception) {
+        requests.remove(uniqueUploadId);
         promise.reject(exception.getMessage());
       }
 
-//      String requestId = uploadRequest
-//                .maxFileSize(100 * 1024 * 1024) // max 100mb
-//                .callback(new UploadCallback() {
-//                    @Override
-//                    public void onStart(String requestId) {
-//                        // your code here
-//                    }
-//
-//                    @Override
-//                    public void onProgress(String requestId, long bytes, long totalBytes) {
-//                      debouncer.debounce(requestId, new Runnable() {
-//                        @Override public void run() {
-//                          // ...
-//                          Double progress = (double) bytes / totalBytes;
-//
-//                          WritableMap eventBody = Arguments.createMap();
-//                          eventBody.putDouble("progress", progress);
-//                          eventBody.putString("uid", params.getString("uid"));
-//
-////            Log.d("CloudinarySdk", "progress: " + progress + " uid: " + params.getString("uid"));
-//                          sendEvent(reactContext, "progressChanged", eventBody);
-//                        }
-//                      }, DEBOUNCE_TIME, TimeUnit.MILLISECONDS);
-//                    }
-//
-//                    @Override
-//                    public void onSuccess(String requestId, Map resultData) {
-//                       requests.remove(requestId);
-//                        // get secure url from result data
-////          Log.d(NAME, "onSuccess: " + resultData.toString());
-//                        promise.resolve(Utils.mapToWritableMap(resultData));
-//                    }
-//
-//                    @Override
-//                    public void onError(String requestId, ErrorInfo error) {
-//                        requests.remove(requestId);
-//                        // your code here
-////          Log.d(NAME, String.format("Code - %d", error.getCode()) + " " + error.getDescription());
-//                        promise.reject(String.format("Code - %d", error.getCode()), error.getDescription());
-//                    }
-//
-//                    @Override
-//                    public void onReschedule(String requestId, ErrorInfo error) {
-//                        // your code here
-//                    }
-//                })
-//                .dispatch(reactContext);
-//        requests.put(params.getString("uid"), requestId);
     }
 }

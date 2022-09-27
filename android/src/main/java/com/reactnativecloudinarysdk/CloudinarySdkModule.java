@@ -82,6 +82,16 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void addListener(String eventName) {
+
+    }
+
+    @ReactMethod
+    public void removeListeners(Integer count) {
+
+    }
+
+    @ReactMethod
     public void setup(ReadableMap params, Promise promise) {
         if (params.getString("cloud_name") != null) {
             setupParams = params;

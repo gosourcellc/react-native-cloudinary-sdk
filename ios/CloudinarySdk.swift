@@ -10,6 +10,7 @@ class CloudinarySdk: RCTEventEmitter {
         "RawUrlType": CLDUrlResourceType.raw,
         "AutoUrlType": CLDUrlResourceType.auto
     ]
+    var requests: [String: CLDUploadRequest] = [:];
 
     @objc override static func requiresMainQueueSetup() -> Bool {
         return true
@@ -59,7 +60,7 @@ class CloudinarySdk: RCTEventEmitter {
         }
         let url = params["url"] ?? ""
         let presetName = params["presetName"] ?? ""
-        let uid = params["uid"] ?? ""
+        let uid = params["uid"] as? String ?? ""
 
         NSLog(url as! String)
         if let url = URL(string: url as! String) {
@@ -81,12 +82,13 @@ class CloudinarySdk: RCTEventEmitter {
                 signed = true
             }
 
-            CloudinaryHelper.upload(cloudinary: cloudinary, url: url, presetName: presetName as! String, params: uploadParams, resourceType: resourceType, signed: signed)
+            let request: CLDUploadRequest = CloudinaryHelper.upload(cloudinary: cloudinary, url: url, presetName: presetName as! String, params: uploadParams, resourceType: resourceType, signed: signed)
                 .progress({ progress in
                     if self.hasListeners {
                         self.sendEvent(withName: "progressChanged", body: ["uid": uid, "progress": Float(progress.fractionCompleted)])
                     }
                 }).response({ response, error in
+                    self.requests[uid] = nil;
                     if (response != nil) {
                         resolve(response?.resultJson)
                         //                        PersistenceHelper.resourceUploaded(localPath: name!, publicId: (response?.publicId)!)
@@ -97,8 +99,15 @@ class CloudinarySdk: RCTEventEmitter {
                         //                        PersistenceHelper.resourceError(localPath: name!, code: (error?.code) != nil ? (error?.code)! : -1, description: (error?.userInfo["message"] as? String))
                     }
                 })
+            requests[uid] = request;
         }
 
+    }
+
+    @objc(cancel:)
+    func cancel(uid: String) -> Void {
+        let request = self.requests[uid];
+        request?.cancel();
     }
 }
 

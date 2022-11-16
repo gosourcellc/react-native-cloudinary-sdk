@@ -88,6 +88,16 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void addListener(String eventName) {
+
+    }
+
+    @ReactMethod
+    public void removeListeners(Integer count) {
+
+    }
+
+    @ReactMethod
     public void cancel(String uid) {
         String requestId = requests.get(uid);
         if (requestId != null) {
@@ -127,8 +137,8 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void upload(ReadableMap params, Promise promise) {
-        uploadParams = params;
-        boolean signed = params.getString("signature") != null;
+        uploadParams = params.getMap("params");
+        boolean signed = uploadParams.getString("signature") != null;
         ReactContext reactContext = getReactApplicationContext();
         String filePath = params.getString("url").replaceFirst("^file://", "");
         Uri fileUri = null;
@@ -136,7 +146,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
             fileUri = Uri.parse(filePath);
         }
 
-        String presetName = params.getString("presetName");
+        String presetName = uploadParams.getString("preset_name");
         MediaManager mediaManager = MediaManager.get();
         UploadRequest uploadRequest;
         if (fileUri != null) {
@@ -145,27 +155,11 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
             uploadRequest = mediaManager.upload(filePath);
         }
 
-//        if (params.getString("type").contentEquals("ImageUrlType")) {
-//            int angle = Utils.getExifAngle(filePath);
-//            uploadRequest.preprocess(
-//                    ImagePreprocessChain.limitDimensionsChain(MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION)
-//                            .addStep(new DimensionsValidator(10, 10, MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION))
-//                            .addStep(new Rotate(angle))
-//                            .saveWith(new BitmapEncoder(BitmapEncoder.Format.JPEG, 80))
-//            );
-//        }
-
-        Map<String, Object> options = new HashMap<>();
+        Map<String, Object> options = new HashMap(uploadParams.toHashMap());
         options.put("resource_type", getResourceType(params.getString("type")));
         options.put("chunk_size", 100 * 1024 * 1024);
-        if (signed) {
-            options.put("public_id", params.getString("publicId"));
-            options.put("folder", params.getString("folder"));
-            options.put("context", params.getString("context"));
-            options.put("upload_preset", params.getString("presetName"));
-            uploadRequest.options(options);
-        } else {
-            uploadRequest.options(options);
+        uploadRequest.options(options);
+        if (!signed) {
             uploadRequest.unsigned(presetName);
         }
 
@@ -219,3 +213,4 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
         requests.put(params.getString("uid"), requestId);
     }
 }
+

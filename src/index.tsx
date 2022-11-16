@@ -73,13 +73,8 @@ export function setup(options: Record<string, any>): Promise<void> {
 
 export type UploadParams = {
   url: string;
-  presetName: string;
   type?: typeof URL_TYPES[keyof typeof URL_TYPES];
-  publicId?: string;
-  folder?: string;
-  signature?: string;
-  timestamp?: number;
-  context?: string;
+  params: Record<string, any>;
 };
 
 export type CloudinaryUploadResponse = {

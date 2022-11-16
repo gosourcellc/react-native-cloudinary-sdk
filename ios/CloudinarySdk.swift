@@ -51,34 +51,28 @@ class CloudinarySdk: RCTEventEmitter {
     }
 
     @objc(upload:withResolver:withRejecter:)
-    func upload(params: Dictionary<String, Any>, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    func upload(dictWithParams: Dictionary<String, Any>, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         let resourceType: CLDUrlResourceType
+        let params = dictWithParams["params"] as! Dictionary<String, AnyObject>
         if let type = params["type"] {
             resourceType = resourceTypes[type as! String] ?? CLDUrlResourceType.auto
         } else {
             resourceType = CLDUrlResourceType.auto
         }
-        let url = params["url"] ?? ""
-        let presetName = params["presetName"] ?? ""
-        let uid = params["uid"] as? String ?? ""
+        let url = dictWithParams["url"] ?? ""
+        let presetName = (params["preset_name"] as? String) ?? ""
+        let uid = dictWithParams["uid"] as? String ?? ""
 
         NSLog(url as! String)
         if let url = URL(string: url as! String) {
 
-            let uploadParams = CLDUploadRequestParams()
+            let uploadParams = CLDUploadRequestParams(params: params)
             uploadParams.setResourceType(resourceType)
 
             var signed: Bool = false
             if let signature = params["signature"] {
-                let publicId = params["publicId"] ?? ""
-                let context = params["context"] ?? ""
-                let folder = params["folder"] ?? ""
                 let timestamp = params["timestamp"] as! NSNumber
-                uploadParams.setPublicId(publicId as! String)
                 uploadParams.setSignature(CLDSignature(signature: signature as! String, timestamp: timestamp))
-                uploadParams.setUploadPreset(presetName as! String)
-                uploadParams.setFolder(folder as! String)
-                uploadParams.setContext(context as! String)
                 signed = true
             }
 
@@ -91,12 +85,8 @@ class CloudinarySdk: RCTEventEmitter {
                     self.requests[uid] = nil;
                     if (response != nil) {
                         resolve(response?.resultJson)
-                        //                        PersistenceHelper.resourceUploaded(localPath: name!, publicId: (response?.publicId)!)
-                        // cleanup - once a file is uploaded we don't use the local copy
-                        //                        try? FileManager.default.removeItem(at: url)
                     } else if (error != nil) {
                         reject(String(error!.code), error?.description, error)
-                        //                        PersistenceHelper.resourceError(localPath: name!, code: (error?.code) != nil ? (error?.code)! : -1, description: (error?.userInfo["message"] as? String))
                     }
                 })
             requests[uid] = request;
@@ -110,4 +100,5 @@ class CloudinarySdk: RCTEventEmitter {
         request?.cancel();
     }
 }
+
 

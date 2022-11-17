@@ -62,8 +62,10 @@ export default function App() {
         const uploaded_url = await Cloudinary.upload(
           {
             url,
-            presetName: Config.presetName,
             type,
+            params: {
+              preset_name: Config.presetName,
+            },
           },
           (data) => {
             console.warn('onProgress - ', data.progress);

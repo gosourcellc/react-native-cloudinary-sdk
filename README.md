@@ -1,9 +1,11 @@
 # react-native-cloudinary-sdk
 react native wrapper for iOS, Android Cloudinary SDKs
 ## Installation
-It's not published to npm yet
 ```sh
 npm install react-native-cloudinary-sdk
+# or with yarn
+yarn add react-native-cloudinary-sdk
+
 ```
 
 ## Usage
@@ -23,8 +25,10 @@ Cloudinary.setup(Config);
 const uploaded_url = await Cloudinary.upload(
   {
     url,
-    presetName: Config.presetName,
     type,
+    params: {
+      preset_name: Config.presetName,
+    },
   },
   (data) => {
     console.warn('onProgress - ', data.progress);

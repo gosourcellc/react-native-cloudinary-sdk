@@ -41,7 +41,6 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
     public final int DEBOUNCE_TIME = 500;
 
     private ReadableMap setupParams;
-    private ReadableMap uploadParams;
 
     private Map<String, String> requests = new HashMap<>();
 
@@ -113,10 +112,12 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
                 MediaManager.init(this.getReactApplicationContext(), new SignatureProvider() {
                     @Override
                     public Signature provideSignature(Map options) {
+                        String signature = (String) options.get("signature");
+                        int timestamp = (int) options.get("timestamp");
                         return new Signature(
-                                uploadParams.getString("signature"),
+                                signature,
                                 setupParams.getString("api_key"),
-                                uploadParams.getInt("timestamp")
+                                timestamp
                         );
                     }
 
@@ -137,7 +138,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void upload(ReadableMap params, Promise promise) {
-        uploadParams = params.getMap("params");
+        ReadableMap uploadParams = params.getMap("params");
         boolean signed = uploadParams.getString("signature") != null;
         ReactContext reactContext = getReactApplicationContext();
         String filePath = params.getString("url").replaceFirst("^file://", "");
@@ -157,6 +158,9 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
         Map<String, Object> options = new HashMap(uploadParams.toHashMap());
         options.put("resource_type", getResourceType(params.getString("type")));
+        if (uploadParams.hasKey("timestamp")) {
+            options.put("timestamp", uploadParams.getInt("timestamp"));
+        }
         options.put("chunk_size", 100 * 1024 * 1024);
         uploadRequest.options(options);
         if (!signed) {

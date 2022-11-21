@@ -126,7 +126,7 @@ dependencies {
     //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
 
-  implementation "com.cloudinary:cloudinary-android:2.2.0"
+  implementation "com.cloudinary:cloudinary-android:2.3.0"
 // From node_modules
 }
 

@@ -74,7 +74,7 @@ export function setup(options: Record<string, any>): Promise<void> {
 export type UploadParams = {
   url: string;
   type?: typeof URL_TYPES[keyof typeof URL_TYPES];
-  params: { preset_name: string } & Record<string, any>;
+  params: { preset_name?: string } & Record<string, any>;
 };
 
 export type CloudinaryUploadResponse = {

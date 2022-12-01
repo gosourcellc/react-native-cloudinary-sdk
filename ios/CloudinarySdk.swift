@@ -1,5 +1,9 @@
 import Cloudinary
 
+enum CloudinaryErrorCodes: Int {
+    case CancelUpload = 11001
+}
+
 @objc(CloudinarySdk)
 class CloudinarySdk: RCTEventEmitter {
     open var cloudinary: CLDCloudinary!
@@ -10,7 +14,7 @@ class CloudinarySdk: RCTEventEmitter {
         "RawUrlType": CLDUrlResourceType.raw,
         "AutoUrlType": CLDUrlResourceType.auto
     ]
-    var requests: [String: CLDUploadRequest] = [:];
+    var requests: [String: RequestControlData] = [:];
 
     @objc override static func requiresMainQueueSetup() -> Bool {
         return true
@@ -89,15 +93,19 @@ class CloudinarySdk: RCTEventEmitter {
                         reject(String(error!.code), error?.description, error)
                     }
                 })
-            requests[uid] = request;
+            let requestControlData = RequestControlData(request: request, resolve: resolve, reject: reject)
+            requests[uid] = requestControlData;
         }
 
     }
 
     @objc(cancel:)
     func cancel(uid: String) -> Void {
-        let request = self.requests[uid];
-        request?.cancel();
+        let requestControlData = self.requests[uid]
+        requestControlData?.request.cancel()
+        
+        let error = NSError(domain: "cancel", code: CloudinaryErrorCodes.CancelUpload.rawValue)
+        requestControlData?.reject("cancel", "Upload request canceled", error)
     }
 }
 

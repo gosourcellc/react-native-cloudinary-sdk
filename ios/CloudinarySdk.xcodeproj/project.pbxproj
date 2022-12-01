@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		71F95DAE2938D3A400F11CC8 /* RequestControlData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F95DAD2938D37B00F11CC8 /* RequestControlData.swift */; };
 		F4FF95D7245B92E800C19C63 /* CloudinarySdk.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* CloudinarySdk.swift */; };
 /* End PBXBuildFile section */
 
@@ -25,6 +26,7 @@
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libCloudinarySdk.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCloudinarySdk.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		71B1701E28AFBD0500A5EF72 /* Helpers */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Helpers; sourceTree = "<group>"; };
+		71F95DAD2938D37B00F11CC8 /* RequestControlData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestControlData.swift; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* CloudinarySdk.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CloudinarySdk.m; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* CloudinarySdk-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CloudinarySdk-Bridging-Header.h"; sourceTree = "<group>"; };
 		F4FF95D6245B92E800C19C63 /* CloudinarySdk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudinarySdk.swift; sourceTree = "<group>"; };
@@ -54,6 +56,7 @@
 			children = (
 				71B1701E28AFBD0500A5EF72 /* Helpers */,
 				F4FF95D6245B92E800C19C63 /* CloudinarySdk.swift */,
+				71F95DAD2938D37B00F11CC8 /* RequestControlData.swift */,
 				B3E7B5891CC2AC0600A0062D /* CloudinarySdk.m */,
 				F4FF95D5245B92E700C19C63 /* CloudinarySdk-Bridging-Header.h */,
 				134814211AA4EA7D00B7C361 /* Products */,
@@ -118,6 +121,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F4FF95D7245B92E800C19C63 /* CloudinarySdk.swift in Sources */,
+				71F95DAE2938D3A400F11CC8 /* RequestControlData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -42,7 +42,7 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
     private ReadableMap setupParams;
 
-    private Map<String, String> requests = new HashMap<>();
+    private Map<String, RequestControlData> requests = new HashMap<>();
 
     public CloudinarySdkModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -98,9 +98,10 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void cancel(String uid) {
-        String requestId = requests.get(uid);
-        if (requestId != null) {
-            MediaManager.get().cancelRequest(requestId);
+        RequestControlData requestControlData = requests.get(uid);
+        if (requestControlData != null) {
+            MediaManager.get().cancelRequest(requestControlData.requestId);
+            requestControlData.promise.reject("cancel", "Upload request canceled");
         }
     }
 
@@ -214,7 +215,8 @@ public class CloudinarySdkModule extends ReactContextBaseJavaModule {
                     }
                 })
                 .dispatch(reactContext);
-        requests.put(params.getString("uid"), requestId);
+        RequestControlData rData = new RequestControlData(requestId, promise);
+        requests.put(params.getString("uid"), rData);
     }
 }
 

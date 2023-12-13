@@ -17,7 +17,7 @@ import * as Cloudinary from 'react-native-cloudinary-sdk';
 const Config = {
   cloud_name: 'your-cloud-name',
   secure: true,
-  presetName: 'your-preset-name',
+  preset_name: 'your-preset-name',
 }
 Cloudinary.setup(Config);
 // ...
@@ -27,7 +27,7 @@ const uploaded_url = await Cloudinary.upload(
     url,
     type,
     params: {
-      preset_name: Config.presetName,
+      preset_name: Config.preset_name,
     },
   },
   (data) => {
